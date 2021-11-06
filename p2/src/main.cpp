@@ -1,7 +1,7 @@
 #include <stdlib.h>
 
-#include <iostream>
-//#include <stdio.h>
+#include <iostream> 
+#include <stdio.h>
 #include <cstring>
 #include <memory>
 #include <optional>
@@ -45,8 +45,9 @@ void testBufMgr();
 
 int main() {
   // Following code shows how to you File and Page classes
-
+  //std::cout << "Hello ";
   const std::string filename = "test.db";
+
   // Clean up from any previous runs that crashed.
   try {
     File::remove(filename);

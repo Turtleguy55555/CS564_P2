@@ -21,10 +21,14 @@ namespace badgerdb {
 
 constexpr int HASHTABLE_SZ(int bufs) { return ((int)(bufs * 1.2) & -2) + 1; }
 
+
+
+
+
+
 //----------------------------------------
 // Constructor of the class BufMgr
 //----------------------------------------
-
 BufMgr::BufMgr(std::uint32_t bufs)
     : numBufs(bufs),
       hashTable(HASHTABLE_SZ(bufs)),
@@ -38,11 +42,43 @@ BufMgr::BufMgr(std::uint32_t bufs)
   clockHand = bufs - 1;
 }
 
-void BufMgr::advanceClock() {}
+/**
+ * @brief Advance clock to next frame in the buffer pool
+ * 
+ */
+void BufMgr::advanceClock() {
+  clockHand +=1;
+}
 
-void BufMgr::allocBuf(FrameId& frame) {}
+/**
+ * @brief Allocate a free frame
+ * 
+ * @param frame frame to be allocated
+ */
+void BufMgr::allocBuf(FrameId& frame) {
 
-void BufMgr::readPage(File& file, const PageId pageNo, Page*& page) {}
+  while(bufDescTable[clockHand].valid == false) {
+    advanceClock();
+  }
+  bufDescTable[clockHand].frameNo = frame;
+  bufDescTable[clockHand].valid = false;
+  //hashTable()
+
+  
+}
+
+/**
+ * @brief Reads the given page from the file into a frame and returns the pointer to page
+ * If the requested page is already present in the buffer pool
+ * pointer to that frame is returned, otherwise a new fame is 
+ * allocated from the buffer pool for reading the page
+ * @param file 
+ * @param pageNo 
+ * @param page 
+ */
+void BufMgr::readPage(File& file, const PageId pageNo, Page*& page) {
+
+}
 
 void BufMgr::unPinPage(File& file, const PageId pageNo, const bool dirty) {}
 
