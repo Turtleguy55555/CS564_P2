@@ -47,7 +47,7 @@ BufMgr::BufMgr(std::uint32_t bufs)
  * 
  */
 void BufMgr::advanceClock() {
-  clockHand +=1;
+  clockHand = (clcokHand + 1) % numBufs;
 }
 
 /**
