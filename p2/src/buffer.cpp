@@ -81,7 +81,25 @@ void BufMgr::readPage(File& file, const PageId pageNo, Page*& page) {
     
 }
 
-void BufMgr::unPinPage(File& file, const PageId pageNo, const bool dirty) {}
+void BufMgr::unPinPage(File& file, const PageId pageNo, const bool dirty) {
+    FrameId frameNo;
+    // check if page is found
+    try {
+        hashTable.lookup(file, pageNo, frameNo);
+    } catch (const HashNotFoundException &) {
+        return;
+    }
+    // check if pin count is already 0
+    if (bufDescTable[frameNo].pinCnt <= 0) {
+        throw PageNotPinnedException(file.filename(), bufDescTable[frameNo].pageNo, frameNo);
+        return;
+    }
+    // decrement pc, set dirty
+    bufDescTable[frameNo].pinCnt--;
+    if (dirty == true) {
+        bufDescTable[frameNo].dirty = true;
+    }
+}
 
 void BufMgr::allocPage(File& file, PageId& pageNo, Page*& page) {}
 
