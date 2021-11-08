@@ -34,12 +34,11 @@ BufMgr::BufMgr(std::uint32_t bufs)
       hashTable(HASHTABLE_SZ(bufs)),
       bufDescTable(bufs),
       bufPool(bufs) {
-  for (FrameId i = 0; i < bufs; i++) {
-    bufDescTable[i].frameNo = i;
-    bufDescTable[i].valid = false;
-  }
-
-  clockHand = bufs - 1;
+    for (FrameId i = 0; i < bufs; i++) {
+        bufDescTable[i].frameNo = i;
+        bufDescTable[i].valid = false;
+    }
+    clockHand = bufs - 1;
 }
 
 /**
@@ -47,7 +46,7 @@ BufMgr::BufMgr(std::uint32_t bufs)
  * 
  */
 void BufMgr::advanceClock() {
-  clockHand = (clcokHand + 1) % numBufs;
+  clockHand = (clockHand + 1) % numBufs;
 }
 
 /**
@@ -57,12 +56,14 @@ void BufMgr::advanceClock() {
  */
 void BufMgr::allocBuf(FrameId& frame) {
 
-  while(bufDescTable[clockHand].valid == false) {
-    advanceClock();
-  }
-  bufDescTable[clockHand].frameNo = frame;
-  bufDescTable[clockHand].valid = false;
-  //hashTable()
+    while(bufDescTable[clockHand].valid == false) {
+
+        advanceClock();
+    }
+    bufDescTable[clockHand].frameNo = frame;
+    bufDescTable[clockHand].valid = false;
+    //hashTable()
+
 
   
 }
@@ -77,14 +78,34 @@ void BufMgr::allocBuf(FrameId& frame) {
  * @param page 
  */
 void BufMgr::readPage(File& file, const PageId pageNo, Page*& page) {
-
+    
 }
 
 void BufMgr::unPinPage(File& file, const PageId pageNo, const bool dirty) {}
 
 void BufMgr::allocPage(File& file, PageId& pageNo, Page*& page) {}
 
-void BufMgr::flushFile(File& file) {}
+void BufMgr::flushFile(File& file) {
+    for (uint32_t i = 0; i < numBufs; i++){
+        if (bufDescTable[i].file == file) {
+            // pincount exception
+            if (bufDescTable[i].pinCnt > 0) {
+                throw PagePinnedException(file.filename(), bufDescTable[i].pageNo, i);
+            }
+            // badbuffer exception
+            if (bufDescTable[i].pageNo == Page::INVALID_NUMBER) {
+                throw BadBufferException(i, bufDescTable[i].dirty, bufDescTable[i].valid, bufDescTable[i].refbit);
+            }
+            // dirty
+            if (bufDescTable[i].dirty == true) {
+                bufDescTable[i].file.writePage(bufPool[i]);
+                hashTable.remove(bufDescTable[i].file, bufDescTable[i].pageNo);
+                bufDescTable[i].clear();
+                bufDescTable[i].dirty = false;
+            }
+        }
+    }
+}
 
 void BufMgr::disposePage(File& file, const PageId PageNo) {}
 
