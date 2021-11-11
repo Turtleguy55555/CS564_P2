@@ -44,6 +44,7 @@ void test6(File &file1);
 void testBufMgr();
 
 int main() {
+
   // Following code shows how to you File and Page classes
   //std::cout << "Hello ";
   const std::string filename = "test.db";
@@ -103,6 +104,7 @@ int main() {
 }
 
 void testBufMgr() {
+  std::cout<<"testing\n";
   // Create buffer manager
   bufMgr = std::make_shared<BufMgr>(num);
 
@@ -135,11 +137,17 @@ void testBufMgr() {
     // their preceding tests. So, they have to be run in the following order.
     // Commenting  a particular test requires commenting all tests that follow
     // it else those tests would fail.
+    std::cout <<"test1\n";
     test1(file1);
+    std::cout <<"test2\n";
     test2(file1, file2, file3);
+    std::cout <<"test3\n";
     test3(file4);
+    std::cout <<"test4\n";
     test4(file4);
+    std::cout <<"test5\n";
     test5(file5);
+    std::cout <<"test6\n";
     test6(file1);
 
     // Close the files by going out of scope
@@ -159,7 +167,9 @@ void testBufMgr() {
 
 void test1(File &file1) {
   // Allocating pages in a file...
+  std::cout<<"test1: allocate\n";
   for (i = 0; i < num; i++) {
+    std::cout<<"hmm\n";
     bufMgr->allocPage(file1, pid[i], page);
     sprintf(tmpbuf, "test.1 Page %u %7.1f", pid[i], (float)pid[i]);
     rid[i] = page->insertRecord(tmpbuf);
@@ -167,6 +177,7 @@ void test1(File &file1) {
   }
 
   // Reading pages back...
+  std::cout<<"test1: read\n";
   for (i = 0; i < num; i++) {
     bufMgr->readPage(file1, pid[i], page);
     sprintf(tmpbuf, "test.1 Page %u %7.1f", pid[i], (float)pid[i]);
