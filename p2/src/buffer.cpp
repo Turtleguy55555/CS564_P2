@@ -55,13 +55,15 @@ void BufMgr::advanceClock() {
  * @param frame frame to be allocated
  */
 void BufMgr::allocBuf(FrameId& frame) {
-    std::cout <<"allocBuf";
-    BufDesc d;
+    std::cout <<"allocBuf\n";
+
     uint start = clockHand;
+    int flag = 1;
     while(true) {
-        if(clockHand == start) {
+        if(clockHand == start && flag == 0) {
             throw BufferExceededException();
         }
+        flag = 0;
         if(bufDescTable[clockHand].valid == true){
             
             if(bufDescTable[clockHand].refbit == 1) {
@@ -72,26 +74,29 @@ void BufMgr::allocBuf(FrameId& frame) {
             }else if(bufDescTable[clockHand].dirty == true) {
                 //flush page to disk
                 //call set() on the frame
-
-                d.Set(bufDescTable[clockHand].file,bufDescTable[clockHand].pageNo);
+                
+                hashTable.remove(bufDescTable[clockHand].file,bufDescTable[clockHand].pageNo);
+                
+                bufDescTable[clockHand].Set(bufDescTable[clockHand].file,bufDescTable[clockHand].pageNo);
                 break;
             }else{
                 //call set on the frame()
-                d.Set(bufDescTable[clockHand].file,bufDescTable[clockHand].pageNo);
+                hashTable.remove(bufDescTable[clockHand].file,bufDescTable[clockHand].pageNo);
+                bufDescTable[clockHand].Set(bufDescTable[clockHand].file,bufDescTable[clockHand].pageNo);
                 break;
             }
         }else{
-            d.Set(bufDescTable[clockHand].file,bufDescTable[clockHand].pageNo);
+            
+            bufDescTable[clockHand].Set(bufDescTable[clockHand].file,bufDescTable[clockHand].pageNo);
             break;
         }
         
     }
+    //std::cout<<"frames\n";
     frame = bufDescTable[clockHand].frameNo;
     //use frame:
     //remove if theres a valid page:
-    if(bufDescTable[clockHand].valid == true) {
-        hashTable.remove(bufDescTable[clockHand].file,bufDescTable[clockHand].pageNo);
-    }
+    
     
 
 
@@ -109,11 +114,11 @@ void BufMgr::allocBuf(FrameId& frame) {
  * @param page 
  */
 void BufMgr::readPage(File& file, const PageId pageNo, Page*& page) {
-    std::cout <<"readPage";
+    std::cout <<"readPage\n";
 }
 
 void BufMgr::unPinPage(File& file, const PageId pageNo, const bool dirty) {
-    std::cout <<"unPinPage";
+    std::cout <<"unPinPage\n";
     FrameId frameNo;
     // check if page is found
     try {
@@ -137,19 +142,24 @@ void BufMgr::allocPage(File& file, PageId& pageNo, Page*& page) {
     
     
     std::cout <<"allocPage\n";
-    page = (&file).allocatePage(); //allocate new page.
+
     
     FrameId frame;
     allocBuf(frame); //get buffer pool frame
-    hashTable.insert(file,pageNo,frame);//insert into hashtable
-    BufDesc d;
-    d.Set(file,pageNo); //set the frame
+    
+    
+    bufDescTable[clockHand].Set(file,pageNo); //set the frame
     //still need to set pageNo somehow...
+    bufPool[frame] = file.allocatePage(); //allocate new page
+    page = &bufPool[frame]; //set page
+    pageNo = bufPool[frame].page_number();
+    hashTable.insert(file,pageNo,frame);//insert into hashtable
+    
     
 }
 
 void BufMgr::flushFile(File& file) {
-    std::cout <<"flushFile";
+    std::cout <<"flushFile\n";
     for (uint32_t i = 0; i < numBufs; i++){
         if (bufDescTable[i].file == file) {
             // pincount exception
@@ -172,11 +182,11 @@ void BufMgr::flushFile(File& file) {
 }
 
 void BufMgr::disposePage(File& file, const PageId PageNo) {
-    std::cout <<"disposePage";
+    std::cout <<"disposePage\n";
 }
 
 void BufMgr::printSelf(void) {
-  std::cout <<"printSelf";
+  std::cout <<"printSelf\n";
   int validFrames = 0;
 
   for (FrameId i = 0; i < numBufs; i++) {
