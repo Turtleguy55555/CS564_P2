@@ -134,9 +134,11 @@ void BufMgr::unPinPage(File& file, const PageId pageNo, const bool dirty) {
 }
 
 void BufMgr::allocPage(File& file, PageId& pageNo, Page*& page) {
-    std::cout <<"allocPage";
-    File f;
-    *page = f.allocatePage(); //allocate new page
+    
+    
+    std::cout <<"allocPage\n";
+    page = (&file).allocatePage(); //allocate new page
+    
     FrameId frame;
     allocBuf(frame); //get buffer pool frame
     hashTable.insert(file,pageNo,frame);//insert into hashtable
