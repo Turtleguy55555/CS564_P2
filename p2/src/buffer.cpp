@@ -115,10 +115,7 @@ void BufMgr::allocBuf(FrameId& frame) {
  */
 void BufMgr::readPage(File& file, const PageId pageNo, Page*& page) {
     std::cout <<"readPage\n";
-<<<<<<< HEAD
-=======
     
->>>>>>> d8751dc8d1609566cce29492eac7fa48ca34cfda
 }
 
 void BufMgr::unPinPage(File& file, const PageId pageNo, const bool dirty) {
