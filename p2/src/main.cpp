@@ -170,7 +170,7 @@ void test1(File &file1) {
   std::cout<<"test1: allocate\n";
   for (i = 0; i < num; i++) {
     bufMgr->allocPage(file1, pid[i], page);
-    std::cout<<"asdfasdf\n";
+    
     sprintf(tmpbuf, "test.1 Page %u %7.1f", pid[i], (float)pid[i]);
     rid[i] = page->insertRecord(tmpbuf);
     bufMgr->unPinPage(file1, pid[i], true);
