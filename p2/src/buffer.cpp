@@ -96,13 +96,7 @@ void BufMgr::allocBuf(FrameId& frame) {
     frame = bufDescTable[clockHand].frameNo;
     //use frame:
     //remove if theres a valid page:
-    
-    
-
-
-
-  
-}
+    }
 
 /**
  * @brief Reads the given page from the file into a frame and returns the pointer to page
@@ -184,6 +178,13 @@ void BufMgr::flushFile(File& file) {
 
 void BufMgr::disposePage(File& file, const PageId PageNo) {
     std::cout <<"disposePage\n";
+    FrameId frameNo;
+    file.deletePage(PageNo);
+    try {
+        hashTable.lookup(file, PageNo, frameNo);
+        hashTable.remove(file, PageNo);
+    } catch (const HashNotFoundException &) {
+    }
 }
 
 void BufMgr::printSelf(void) {
