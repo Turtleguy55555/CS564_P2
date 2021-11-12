@@ -109,7 +109,19 @@ void BufMgr::allocBuf(FrameId& frame) {
  */
 void BufMgr::readPage(File& file, const PageId pageNo, Page*& page) {
     std::cout <<"readPage\n";
-    
+    FrameId frameNo;
+    try {
+        hashTable.lookup(file, pageNo, frameNo);
+        bufDescTable[clockHand].refbit = 1;
+        bufDescTable[frameNo].pinCnt++;
+        page = & bufPool[frameNo];
+    } catch (const HashNotFoundException &) {
+        allocBuf(frameNo);
+        file.readPage(pageNo);
+        hashTable.insert(file, pageNo, frameNo);
+        bufDescTable[clockHand].Set(file,pageNo);
+        page = & bufPool[frameNo];
+    }
 }
 
 void BufMgr::unPinPage(File& file, const PageId pageNo, const bool dirty) {
@@ -182,9 +194,10 @@ void BufMgr::disposePage(File& file, const PageId PageNo) {
     file.deletePage(PageNo);
     try {
         hashTable.lookup(file, PageNo, frameNo);
-        hashTable.remove(file, PageNo);
     } catch (const HashNotFoundException &) {
+        return;
     }
+    hashTable.remove(file, PageNo);
 }
 
 void BufMgr::printSelf(void) {
