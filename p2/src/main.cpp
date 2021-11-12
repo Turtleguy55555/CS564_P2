@@ -176,7 +176,7 @@ void test1(File &file1) {
     bufMgr->unPinPage(file1, pid[i], true);
   }
 
-  // Reading pages back...
+  // Reading pages back....
   std::cout<<"test1: read\n";
   for (i = 0; i < num; i++) {
     bufMgr->readPage(file1, pid[i], page);

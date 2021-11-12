@@ -137,7 +137,7 @@ void BufMgr::allocPage(File& file, PageId& pageNo, Page*& page) {
     
     
     std::cout <<"allocPage\n";
-    page = (&file).allocatePage(); //allocate new page
+    page = (&file).allocatePage(); //allocate new page.
     
     FrameId frame;
     allocBuf(frame); //get buffer pool frame
