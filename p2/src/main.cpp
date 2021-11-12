@@ -117,6 +117,7 @@ void testBufMgr() {
 
   // Clean up from any previous runs that crashed.
   try {
+      // piazza post
     File::remove(filename1);
     File::remove(filename2);
     File::remove(filename3);
@@ -154,6 +155,7 @@ void testBufMgr() {
   }
 
   // Delete files
+  bufMgr = nullptr;
   File::remove(filename1);
   File::remove(filename2);
   File::remove(filename3);
