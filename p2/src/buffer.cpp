@@ -56,25 +56,28 @@ void BufMgr::advanceClock() {
  */
 void BufMgr::allocBuf(FrameId& frame) {
     std::cout <<"allocBuf\n";
-
+    // mark the starting clock hand position
     uint start = clockHand;
+    // set to 0? if all clock positions have been traversed
     int flag = 1;
-    while(true) {
+    while(true){
         if(clockHand == start && flag == 0) {
             throw BufferExceededException();
         }
         flag = 0;
         if(bufDescTable[clockHand].valid == true){
-            
             if(bufDescTable[clockHand].refbit == 1) {
                 bufDescTable[clockHand].refbit = 0;
                 advanceClock();
+                continue;
             }else if(bufDescTable[clockHand].pinCnt > 0) {
                 advanceClock();
+                continue;
             }else if(bufDescTable[clockHand].dirty == true) {
                 //flush page to disk
                 //call set() on the frame
-                
+                //
+                //TODO no lookup
                 hashTable.remove(bufDescTable[clockHand].file,bufDescTable[clockHand].pageNo);
                 
                 bufDescTable[clockHand].Set(bufDescTable[clockHand].file,bufDescTable[clockHand].pageNo);
@@ -85,18 +88,16 @@ void BufMgr::allocBuf(FrameId& frame) {
                 bufDescTable[clockHand].Set(bufDescTable[clockHand].file,bufDescTable[clockHand].pageNo);
                 break;
             }
-        }else{
-            
+        } else {
             bufDescTable[clockHand].Set(bufDescTable[clockHand].file,bufDescTable[clockHand].pageNo);
             break;
         }
-        
     }
     //std::cout<<"frames\n";
     frame = bufDescTable[clockHand].frameNo;
     //use frame:
     //remove if theres a valid page:
-    }
+}
 
 /**
  * @brief Reads the given page from the file into a frame and returns the pointer to page
