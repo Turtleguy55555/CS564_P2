@@ -215,7 +215,7 @@ void BufMgr::allocPage(File& file, PageId& pageNo, Page*& page) {
     allocBuf(frame); //get buffer pool frame
     
     
-    bufDescTable[clockHand].Set(file,pageNo); //set the frame
+    bufDescTable[frame].Set(file,pageNo); //set the frame
     //still need to set pageNo somehow...
     bufPool[frame] = file.allocatePage(); //allocate new page
     page = &bufPool[frame]; //set page
