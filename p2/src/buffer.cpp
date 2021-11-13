@@ -65,6 +65,7 @@ void BufMgr::allocBuf(FrameId& frame) {
         if(clockHand == start && flag == 0) {
             throw BufferExceededException();
         }
+        flag = 0;
         if(bufDescTable[clockHand].valid == true){
             // if refbit is 1 & page is valid, flip refbit to 0
             if(bufDescTable[clockHand].refbit == 0) {
