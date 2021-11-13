@@ -73,7 +73,7 @@ void BufMgr::allocBuf(FrameId& frame) {
         started = true;
         if(bufDescTable[clockHand].valid == true){
             // if refbit is 1 & page is valid, flip refbit to 0
-            if(bufDescTable[clockHand].refbit == false) {
+           if(bufDescTable[clockHand].refbit == false) {
                 // if page is pinned, skip this page
                 if(bufDescTable[clockHand].pinCnt == 0) {
                     // if page is dirty & valid & unpinned, write
@@ -86,6 +86,7 @@ void BufMgr::allocBuf(FrameId& frame) {
                         bufDescTable[clockHand].dirty = false;
                     }
                     // else, simply continue
+                    hashTable.remove(bufDescTable[clockHand].file,bufDescTable[clockHand].pageNo);
                     break;
                 } else {
                     advanceClock();
@@ -103,6 +104,7 @@ void BufMgr::allocBuf(FrameId& frame) {
     //std::cout<<"frames\n";
     //hashTable.remove(bufDescTable[clockHand].file,bufDescTable[clockHand].pageNo);
     bufDescTable[clockHand].Set(bufDescTable[clockHand].file,bufDescTable[clockHand].pageNo);
+                        
     frame = bufDescTable[clockHand].frameNo;
     //use frame:
     //remove if theres a valid page:
@@ -173,14 +175,14 @@ void BufMgr::readPage(File& file, const PageId pageNo, Page*& page) {
     FrameId frameNo;
     try {
         hashTable.lookup(file, pageNo, frameNo);
-        bufDescTable[clockHand].refbit = 1;
+        bufDescTable[frameNo].refbit = true;
         bufDescTable[frameNo].pinCnt++;
         page = & bufPool[frameNo];
     } catch (const HashNotFoundException &) {
         allocBuf(frameNo);
-        file.readPage(pageNo);
+        bufPool[frameNo] = file.readPage(pageNo);
         hashTable.insert(file, pageNo, frameNo);
-        bufDescTable[clockHand].Set(file,pageNo);
+        bufDescTable[frameNo].Set(file,pageNo);
         page = & bufPool[frameNo];
     }
 }
@@ -244,6 +246,7 @@ void BufMgr::flushFile(File& file) {
                 bufDescTable[i].dirty = false;
             }
             hashTable.remove(bufDescTable[i].file, bufDescTable[i].pageNo);
+            bufDescTable[i].clear();
         }
     }
 }
@@ -254,6 +257,7 @@ void BufMgr::disposePage(File& file, const PageId PageNo) {
     file.deletePage(PageNo);
     try {
         hashTable.lookup(file, PageNo, frameNo);
+        bufDescTable[frameNo].clear();
     } catch (const HashNotFoundException &) {
         return;
     }
