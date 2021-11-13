@@ -64,7 +64,7 @@ void BufMgr::allocBuf(FrameId& frame) {
     bool secondPass = false;
     while(true){
         if(clockHand == start && started == true) {
-            if (started && !secondPass) {
+            if (!secondPass) {
                 secondPass = true;
             } else {
                 throw BufferExceededException();
@@ -73,7 +73,7 @@ void BufMgr::allocBuf(FrameId& frame) {
         started = true;
         if(bufDescTable[clockHand].valid == true){
             // if refbit is 1 & page is valid, flip refbit to 0
-            if(bufDescTable[clockHand].refbit == 0) {
+            if(bufDescTable[clockHand].refbit == false) {
                 // if page is pinned, skip this page
                 if(bufDescTable[clockHand].pinCnt == 0) {
                     // if page is dirty & valid & unpinned, write
@@ -83,12 +83,7 @@ void BufMgr::allocBuf(FrameId& frame) {
                         //call set on the frame()
                         // TODO uncaught exception
                         bufDescTable[clockHand].file.writePage(bufPool[clockHand]);
-                        try {
-                            hashTable.remove(bufDescTable[clockHand].file,bufDescTable[clockHand].pageNo);
-                        } catch (const HashNotFoundException &) {
-                            // shouldn't have been here but here we are
-                            printf("\n\nstarted from the top but now are here\n\n");
-                        }
+                        bufDescTable[clockHand].clear();
                     }
                     // else, simply continue
                     break;
@@ -97,7 +92,7 @@ void BufMgr::allocBuf(FrameId& frame) {
                     continue;
                 }
             } else {
-                bufDescTable[clockHand].refbit = 0;
+                bufDescTable[clockHand].refbit = true;
                 advanceClock();
                 continue;
             }
