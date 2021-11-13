@@ -60,12 +60,17 @@ void BufMgr::allocBuf(FrameId& frame) {
     // mark the starting clock hand position
     uint start = clockHand;
     // set to 0? if all clock positions have been traversed
-    int flag = 1;
+    bool started = false;
+    bool secondPass = false;
     while(true){
-        if(clockHand == start && flag == 0) {
-            throw BufferExceededException();
+        if(clockHand == start && started == true) {
+            if (started && !secondPass) {
+                secondPass = true;
+            } else {
+                throw BufferExceededException();
+            }
         }
-        flag = 0;
+        started = true;
         if(bufDescTable[clockHand].valid == true){
             // if refbit is 1 & page is valid, flip refbit to 0
             if(bufDescTable[clockHand].refbit == 0) {
@@ -92,7 +97,7 @@ void BufMgr::allocBuf(FrameId& frame) {
                     continue;
                 }
             } else {
-                bufDescTable[clockHand].refbit = 1;
+                bufDescTable[clockHand].refbit = 0;
                 advanceClock();
                 continue;
             }
