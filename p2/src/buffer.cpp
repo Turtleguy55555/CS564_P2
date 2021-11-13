@@ -83,7 +83,7 @@ void BufMgr::allocBuf(FrameId& frame) {
                         //call set on the frame()
                         // TODO uncaught exception
                         bufDescTable[clockHand].file.writePage(bufPool[clockHand]);
-                        bufDescTable[clockHand].clear();
+                        bufDescTable[clockHand].dirty = false;
                     }
                     // else, simply continue
                     break;
@@ -92,7 +92,7 @@ void BufMgr::allocBuf(FrameId& frame) {
                     continue;
                 }
             } else {
-                bufDescTable[clockHand].refbit = true;
+                bufDescTable[clockHand].refbit = false;
                 advanceClock();
                 continue;
             }
@@ -101,8 +101,9 @@ void BufMgr::allocBuf(FrameId& frame) {
         }
     }
     //std::cout<<"frames\n";
+    //hashTable.remove(bufDescTable[clockHand].file,bufDescTable[clockHand].pageNo);
     bufDescTable[clockHand].Set(bufDescTable[clockHand].file,bufDescTable[clockHand].pageNo);
-    frame = clockHand;
+    frame = bufDescTable[clockHand].frameNo;
     //use frame:
     //remove if theres a valid page:
 }
@@ -215,11 +216,11 @@ void BufMgr::allocPage(File& file, PageId& pageNo, Page*& page) {
     allocBuf(frame); //get buffer pool frame
     
     
-    bufDescTable[frame].Set(file,pageNo); //set the frame
     //still need to set pageNo somehow...
     bufPool[frame] = file.allocatePage(); //allocate new page
     page = &bufPool[frame]; //set page
     pageNo = bufPool[frame].page_number();
+    bufDescTable[frame].Set(file,pageNo); //set the frame
     hashTable.insert(file,pageNo,frame);//insert into hashtable
     
     
@@ -240,10 +241,9 @@ void BufMgr::flushFile(File& file) {
             // dirty
             if (bufDescTable[i].dirty == true) {
                 bufDescTable[i].file.writePage(bufPool[i]);
-                hashTable.remove(bufDescTable[i].file, bufDescTable[i].pageNo);
-                bufDescTable[i].clear();
                 bufDescTable[i].dirty = false;
             }
+            hashTable.remove(bufDescTable[i].file, bufDescTable[i].pageNo);
         }
     }
 }
