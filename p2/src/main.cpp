@@ -198,8 +198,7 @@ void test2(File &file1, File &file2, File &file3) {
   // The page number and the value should match
 
   for (i = 1; i < num / 3; i++) {
-    printf("Error i:  %d:\n", i);
-      bufMgr->allocPage(file2, pageno2, page2);
+    bufMgr->allocPage(file2, pageno2, page2);
     sprintf(tmpbuf, "test.2 Page %u %7.1f", pageno2, (float)pageno2);
     rid2 = page2->insertRecord(tmpbuf);
     long int index = random() % num;
@@ -207,8 +206,6 @@ void test2(File &file1, File &file2, File &file3) {
     bufMgr->readPage(file1, pageno1, page);
 
     sprintf(tmpbuf, "test.1 Page %u %7.1f", pageno1, (float)pageno1);
-    printf("BITCH\n");
-    //printf("page->getRecord(rid[index])%s" + page->getRecord(rid[index]).c_str());
     if (strncmp(page->getRecord(rid[index]).c_str(), tmpbuf, strlen(tmpbuf)) != 0) {
       PRINT_ERROR("ERROR :: CONTENTS DID NOT MATCH");
     }
