@@ -95,6 +95,8 @@ void BufMgr::allocBuf(FrameId& frame) {
                 advanceClock();
                 continue;
             }
+        } else {
+            break;
         }
     }
     //std::cout<<"frames\n";
