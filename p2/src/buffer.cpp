@@ -101,65 +101,10 @@ void BufMgr::allocBuf(FrameId& frame) {
             break;
         }
     }
-    //std::cout<<"frames\n";
-    //hashTable.remove(bufDescTable[clockHand].file,bufDescTable[clockHand].pageNo);
+    // set frame
     bufDescTable[clockHand].Set(bufDescTable[clockHand].file,bufDescTable[clockHand].pageNo);
-                        
     frame = bufDescTable[clockHand].frameNo;
-    //use frame:
-    //remove if theres a valid page:
 }
-
-/**
-void BufMgr::allocBuf(FrameId& frame) {
-    std::cout <<"allocBuf\n";
-    // mark the starting clock hand position
-    uint start = clockHand;
-    // set to 0? if all clock positions have been traversed
-    int flag = 1;
-    while(true){
-        if(clockHand == start && flag == 0) {
-            throw BufferExceededException();
-        }
-        flag = 0;
-        if(bufDescTable[clockHand].valid == true){
-            // if refbit is 1 & page is valid, flip refbit to 0
-            if(bufDescTable[clockHand].refbit == 1) {
-                bufDescTable[clockHand].refbit = 0;
-                advanceClock();
-                continue;
-            }
-            // if page is pinned, skip this page
-            else if(bufDescTable[clockHand].pinCnt > 0) {
-                advanceClock();
-                continue;
-            }
-            // if page is dirty & valid & unpinned, write
-            else if(bufDescTable[clockHand].dirty == true) {
-                //flush page to disk
-                //call set() on the frame
-                // Simon TODO 
-                // original hash remove, wrong
-                bufDescTable[clockHand].Set(bufDescTable[clockHand].file,bufDescTable[clockHand].pageNo);
-                break;
-            }else{
-                //call set on the frame()
-                // TODO uncaught exception
-                hashTable.remove(bufDescTable[clockHand].file,bufDescTable[clockHand].pageNo);
-                bufDescTable[clockHand].Set(bufDescTable[clockHand].file,bufDescTable[clockHand].pageNo);
-                break;
-            }
-        } else {
-            bufDescTable[clockHand].Set(bufDescTable[clockHand].file,bufDescTable[clockHand].pageNo);
-            break;
-        }
-    }
-    //std::cout<<"frames\n";
-    frame = bufDescTable[clockHand].frameNo;
-    //use frame:
-    //remove if theres a valid page:
-}
-*/
 
 /**
  * @brief Reads the given page from the file into a frame and returns the pointer to page
