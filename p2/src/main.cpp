@@ -117,6 +117,7 @@ void testBufMgr() {
 
   // Clean up from any previous runs that crashed.
   try {
+      // piazza post
     File::remove(filename1);
     File::remove(filename2);
     File::remove(filename3);
@@ -154,6 +155,7 @@ void testBufMgr() {
   }
 
   // Delete files
+  bufMgr = nullptr;
   File::remove(filename1);
   File::remove(filename2);
   File::remove(filename3);
@@ -195,7 +197,7 @@ void test2(File &file1, File &file2, File &file3) {
   // Writing and reading back multiple files
   // The page number and the value should match
 
-  for (i = 0; i < num / 3; i++) {
+  for (i = 1; i < num / 3; i++) {
     bufMgr->allocPage(file2, pageno2, page2);
     sprintf(tmpbuf, "test.2 Page %u %7.1f", pageno2, (float)pageno2);
     rid2 = page2->insertRecord(tmpbuf);

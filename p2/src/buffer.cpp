@@ -54,55 +54,114 @@ void BufMgr::advanceClock() {
  * 
  * @param frame frame to be allocated
  */
+
 void BufMgr::allocBuf(FrameId& frame) {
     std::cout <<"allocBuf\n";
-
+    // mark the starting clock hand position
     uint start = clockHand;
+    // set to 0? if all clock positions have been traversed
+    bool started = false;
+    bool secondPass = false;
+    while(true){
+        if(clockHand == start && started == true) {
+            if (started && !secondPass) {
+                secondPass = true;
+            } else {
+                throw BufferExceededException();
+            }
+        }
+        started = true;
+        if(bufDescTable[clockHand].valid == true){
+            // if refbit is 1 & page is valid, flip refbit to 0
+            if(bufDescTable[clockHand].refbit == 0) {
+                // if page is pinned, skip this page
+                if(bufDescTable[clockHand].pinCnt == 0) {
+                    // if page is dirty & valid & unpinned, write
+                    if(bufDescTable[clockHand].dirty == true) {
+                        // Simon TODO 
+                        // if page is dirty, flush
+                        //call set on the frame()
+                        // TODO uncaught exception
+                        bufDescTable[clockHand].file.writePage(bufPool[clockHand]);
+                        try {
+                            hashTable.remove(bufDescTable[clockHand].file,bufDescTable[clockHand].pageNo);
+                        } catch (const HashNotFoundException &) {
+                            // shouldn't have been here but here we are
+                            printf("\n\nstarted from the top but now are here\n\n");
+                        }
+                    }
+                    // else, simply continue
+                    break;
+                } else {
+                    advanceClock();
+                    continue;
+                }
+            } else {
+                bufDescTable[clockHand].refbit = 0;
+                advanceClock();
+                continue;
+            }
+        } else {
+            break;
+        }
+    }
+    //std::cout<<"frames\n";
+    bufDescTable[clockHand].Set(bufDescTable[clockHand].file,bufDescTable[clockHand].pageNo);
+    frame = clockHand;
+    //use frame:
+    //remove if theres a valid page:
+}
+
+/**
+void BufMgr::allocBuf(FrameId& frame) {
+    std::cout <<"allocBuf\n";
+    // mark the starting clock hand position
+    uint start = clockHand;
+    // set to 0? if all clock positions have been traversed
     int flag = 1;
-    while(true) {
+    while(true){
         if(clockHand == start && flag == 0) {
             throw BufferExceededException();
         }
         flag = 0;
         if(bufDescTable[clockHand].valid == true){
-            
+            // if refbit is 1 & page is valid, flip refbit to 0
             if(bufDescTable[clockHand].refbit == 1) {
                 bufDescTable[clockHand].refbit = 0;
                 advanceClock();
-            }else if(bufDescTable[clockHand].pinCnt > 0) {
+                continue;
+            }
+            // if page is pinned, skip this page
+            else if(bufDescTable[clockHand].pinCnt > 0) {
                 advanceClock();
-            }else if(bufDescTable[clockHand].dirty == true) {
+                continue;
+            }
+            // if page is dirty & valid & unpinned, write
+            else if(bufDescTable[clockHand].dirty == true) {
                 //flush page to disk
                 //call set() on the frame
-                
-                hashTable.remove(bufDescTable[clockHand].file,bufDescTable[clockHand].pageNo);
-                
+                // Simon TODO 
+                // original hash remove, wrong
                 bufDescTable[clockHand].Set(bufDescTable[clockHand].file,bufDescTable[clockHand].pageNo);
                 break;
             }else{
                 //call set on the frame()
+                // TODO uncaught exception
                 hashTable.remove(bufDescTable[clockHand].file,bufDescTable[clockHand].pageNo);
                 bufDescTable[clockHand].Set(bufDescTable[clockHand].file,bufDescTable[clockHand].pageNo);
                 break;
             }
-        }else{
-            
+        } else {
             bufDescTable[clockHand].Set(bufDescTable[clockHand].file,bufDescTable[clockHand].pageNo);
             break;
         }
-        
     }
     //std::cout<<"frames\n";
     frame = bufDescTable[clockHand].frameNo;
     //use frame:
     //remove if theres a valid page:
-    
-    
-
-
-
-  
 }
+*/
 
 /**
  * @brief Reads the given page from the file into a frame and returns the pointer to page
@@ -115,20 +174,19 @@ void BufMgr::allocBuf(FrameId& frame) {
  */
 void BufMgr::readPage(File& file, const PageId pageNo, Page*& page) {
     std::cout <<"readPage\n";
-    FrameId frame;
+    FrameId frameNo;
     try {
-        hashTable.lookup(file, pageNo, frame);
-        bufDescTable[frame].refbit = 1;
-        bufDescTable[frame].pinCnt++;
-        page = &bufPool[frame];
+        hashTable.lookup(file, pageNo, frameNo);
+        bufDescTable[clockHand].refbit = 1;
+        bufDescTable[frameNo].pinCnt++;
+        page = & bufPool[frameNo];
     } catch (const HashNotFoundException &) {
-        allocBuf(frame);
+        allocBuf(frameNo);
         file.readPage(pageNo);
-        hashTable.insert(file,pageNo,frame);
-        bufDescTable[frame].Set(file,pageNo);
-        page = &bufPool[frame];
+        hashTable.insert(file, pageNo, frameNo);
+        bufDescTable[clockHand].Set(file,pageNo);
+        page = & bufPool[frameNo];
     }
-
 }
 
 void BufMgr::unPinPage(File& file, const PageId pageNo, const bool dirty) {
@@ -197,8 +255,14 @@ void BufMgr::flushFile(File& file) {
 
 void BufMgr::disposePage(File& file, const PageId PageNo) {
     std::cout <<"disposePage\n";
-    
-
+    FrameId frameNo;
+    file.deletePage(PageNo);
+    try {
+        hashTable.lookup(file, PageNo, frameNo);
+    } catch (const HashNotFoundException &) {
+        return;
+    }
+    hashTable.remove(file, PageNo);
 }
 
 void BufMgr::printSelf(void) {
