@@ -270,6 +270,8 @@ void test4(File &file4) {
 
 void test5(File &file5) {
   for (i = 0; i < num; i++) {
+    printf("Error i:  %d:\n", i);
+    printf("Num: %d:\n", num);
     bufMgr->allocPage(file5, pid[i], page);
     sprintf(tmpbuf, "test.5 Page %u %7.1f", pid[i], (float)pid[i]);
     rid[i] = page->insertRecord(tmpbuf);

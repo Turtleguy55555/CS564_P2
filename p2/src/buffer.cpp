@@ -57,19 +57,30 @@ void BufMgr::advanceClock() {
 
 void BufMgr::allocBuf(FrameId& frame) {
     std::cout <<"allocBuf\n";
+    advanceClock();
     // mark the starting clock hand position
     uint start = clockHand;
     // set to 0? if all clock positions have been traversed
     bool started = false;
     bool secondPass = false;
+    bool temp = false;
     while(true){
+        printf("\nstart: %u", start);
+        printf(" clockHand: %u\n", clockHand);
         if(clockHand == start && started == true) {
             if (!secondPass) {
+                printf("secondPass set to true");
                 secondPass = true;
-            } else {
-                throw BufferExceededException();
             }
+        } else if (clockHand == (start + 1) % numBufs && secondPass && !temp) {
+            temp = true;
+            //throw BufferExceededException();
+        } else if (clockHand == (start + 1) % numBufs && secondPass && temp) {
+            throw BufferExceededException();
+            return;
         }
+
+
         started = true;
         if(bufDescTable[clockHand].valid == true){
             // if refbit is 1 & page is valid, flip refbit to 0
@@ -78,14 +89,12 @@ void BufMgr::allocBuf(FrameId& frame) {
                 if(bufDescTable[clockHand].pinCnt == 0) {
                     // if page is dirty & valid & unpinned, write
                     if(bufDescTable[clockHand].dirty == true) {
-                        // Simon TODO 
                         // if page is dirty, flush
                         //call set on the frame()
-                        // TODO uncaught exception
                         bufDescTable[clockHand].file.writePage(bufPool[clockHand]);
                         bufDescTable[clockHand].dirty = false;
                     }
-                    // else, simply continue
+                    // else, remove from buffer and continue
                     hashTable.remove(bufDescTable[clockHand].file,bufDescTable[clockHand].pageNo);
                     break;
                 } else {
