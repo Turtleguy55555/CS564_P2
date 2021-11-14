@@ -56,21 +56,26 @@ void BufMgr::advanceClock() {
  */
 
 void BufMgr::allocBuf(FrameId& frame) {
-    std::cout <<"allocBuf\n";
+    // std::cout <<"allocBuf\n";
     // mark the starting clock hand position
-    uint start = clockHand;
+
+    uint endingPosition = (clockHand-1) % numBufs;
+    // uint startingPosition = clockHand;
+
     // set to 0? if all clock positions have been traversed
-    bool started = false;
-    bool secondPass = false;
-    while(true){
-        if(clockHand == start && started == true) {
-            if (!secondPass) {
-                secondPass = true;
-            } else {
-                throw BufferExceededException();
-            }
+    // bool started = false;
+    // bool secondPass = false;
+
+    int revolutions = 0;
+
+    do{
+        printf("rev %d \n",revolutions);
+
+        if(clockHand == endingPosition){
+            printf("end of round: %d \n",revolutions);
+            revolutions++;
         }
-        started = true;
+
         if(bufDescTable[clockHand].valid == true){
             // if refbit is 1 & page is valid, flip refbit to 0
            if(bufDescTable[clockHand].refbit == false) {
@@ -98,12 +103,22 @@ void BufMgr::allocBuf(FrameId& frame) {
                 continue;
             }
         } else {
+            // printf("invalid frame \n");
             break;
         }
     }
+    while(revolutions < 2);
+
+    if (revolutions >= 2){
+        throw BufferExceededException();
+    }
+
+    
     // set frame
     bufDescTable[clockHand].Set(bufDescTable[clockHand].file,bufDescTable[clockHand].pageNo);
     frame = bufDescTable[clockHand].frameNo;
+    
+    
 }
 
 /**
@@ -116,7 +131,7 @@ void BufMgr::allocBuf(FrameId& frame) {
  * @param page 
  */
 void BufMgr::readPage(File& file, const PageId pageNo, Page*& page) {
-    std::cout <<"readPage\n";
+    // std::cout <<"readPage\n";
     FrameId frameNo;
     try {
         hashTable.lookup(file, pageNo, frameNo);
@@ -133,7 +148,7 @@ void BufMgr::readPage(File& file, const PageId pageNo, Page*& page) {
 }
 
 void BufMgr::unPinPage(File& file, const PageId pageNo, const bool dirty) {
-    std::cout <<"unPinPage\n";
+    // std::cout <<"unPinPage\n";
     FrameId frameNo;
     // check if page is found
     try {
