@@ -190,8 +190,8 @@ void BufMgr::flushFile(File& file) {
             hashTable.remove(bufDescTable[i].file, bufDescTable[i].pageNo);
             bufDescTable[i].clear();
         }
-        //file.close();
     }
+    file.close();
 }
 
 void BufMgr::disposePage(File& file, const PageId PageNo) {
