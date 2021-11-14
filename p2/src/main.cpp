@@ -209,7 +209,6 @@ void test2(File &file1, File &file2, File &file3) {
     if (strncmp(page->getRecord(rid[index]).c_str(), tmpbuf, strlen(tmpbuf)) != 0) {
       PRINT_ERROR("ERROR :: CONTENTS DID NOT MATCH");
     }
-    printf("AFTER");
     bufMgr->allocPage(file3, pageno3, page3);
     sprintf(tmpbuf, "test.3 Page %u %7.1f", pageno3, (float)pageno3);
     rid3 = page3->insertRecord(tmpbuf);
@@ -270,8 +269,6 @@ void test4(File &file4) {
 
 void test5(File &file5) {
   for (i = 0; i < num; i++) {
-    printf("Error i:  %d:\n", i);
-    printf("Num: %d:\n", num);
     bufMgr->allocPage(file5, pid[i], page);
     sprintf(tmpbuf, "test.5 Page %u %7.1f", pid[i], (float)pid[i]);
     rid[i] = page->insertRecord(tmpbuf);
@@ -311,5 +308,5 @@ void test6(File &file1) {
 
   for (i = 1; i <= num; i++) bufMgr->unPinPage(file1, i, true);
 
-  bufMgr->flushFile(file1);
+  //bufMgr->flushFile(file1);
 }
