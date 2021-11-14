@@ -49,28 +49,31 @@ void BufMgr::advanceClock() {
  * 
  * @param frame frame to be allocated
  */
-
 void BufMgr::allocBuf(FrameId& frame) {
     advanceClock();
     // mark the starting clock hand position
     uint start = clockHand;
-    // set to 0? if all clock positions have been traversed
+    // flag for whether the clock has started
     bool started = false;
+    // flag for whether the clock is on the second pass
     bool secondPass = false;
+    // flag for whether the clock is on the second pass + 1 buffer
     bool temp = false;
     while(true){
+        // if clock has started and ran one revolution
         if(clockHand == start && started == true) {
+            // if not second pass, set to true
             if (!secondPass) {
                 secondPass = true;
             }
+        // if clock hand ran 1 revolution + 1 buffer, set the temp flag
         } else if (clockHand == (start + 1) % numBufs && secondPass && !temp) {
             temp = true;
-            //throw BufferExceededException();
+        // if clock hand ran 2 revolution + 1 buffer
         } else if (clockHand == (start + 1) % numBufs && secondPass && temp) {
             throw BufferExceededException();
             return;
         }
-
 
         started = true;
         if(bufDescTable[clockHand].valid == true){
@@ -86,7 +89,7 @@ void BufMgr::allocBuf(FrameId& frame) {
                         bufDescTable[clockHand].file.writePage(bufPool[clockHand]);
                         bufDescTable[clockHand].dirty = false;
                     }
-                    // else, remove from buffer and continue
+                    // else, set frame, remove from buffer and continue
                     bufDescTable[clockHand].Set(bufDescTable[clockHand].file,bufDescTable[clockHand].pageNo);
                     hashTable.remove(bufDescTable[clockHand].file,bufDescTable[clockHand].pageNo);
                     break;
@@ -95,16 +98,18 @@ void BufMgr::allocBuf(FrameId& frame) {
                     continue;
                 }
             } else {
+                // flip the refbit
                 bufDescTable[clockHand].refbit = false;
                 advanceClock();
                 continue;
             }
         } else {
+            // set frame
             bufDescTable[clockHand].Set(bufDescTable[clockHand].file,bufDescTable[clockHand].pageNo);
             break;
         }
     }
-    // set frame
+    // update frame
     frame = clockHand;
 }
 
@@ -139,6 +144,12 @@ void BufMgr::readPage(File& file, const PageId pageNo, Page*& page) {
     }
 }
 
+/**
+ * @brief unpin a given page from the file. 
+ * @param file 
+ * @param pageNo 
+ * @param dirty
+ */
 void BufMgr::unPinPage(File& file, const PageId pageNo, const bool dirty) {
     FrameId frameNo;
     // check if page is found
@@ -159,6 +170,13 @@ void BufMgr::unPinPage(File& file, const PageId pageNo, const bool dirty) {
     }
 }
 
+
+/**
+ * @brief allocate a page to a given file 
+ * @param file 
+ * @param pageNo, set reference
+ * @param page, set reference
+ */
 void BufMgr::allocPage(File& file, PageId& pageNo, Page*& page) {
     FrameId frame;
     
@@ -172,9 +190,14 @@ void BufMgr::allocPage(File& file, PageId& pageNo, Page*& page) {
     page = &bufPool[frame]; //set page
 }
 
+/**
+ * @brief flush a file. Close all bufDescTable entries in the given file, and remove from hashTable
+ * @param file 
+ */
 void BufMgr::flushFile(File& file) {
     for (uint32_t i = 0; i < numBufs; i++){
         if (bufDescTable[i].file == file) {
+            // pincount needs to be == 0
             if (bufDescTable[i].pinCnt > 0) {
                 throw PagePinnedException(file.filename(), bufDescTable[i].pageNo, i);
             }
@@ -182,7 +205,7 @@ void BufMgr::flushFile(File& file) {
             if (!bufDescTable[i].valid) {
                 throw BadBufferException(i, bufDescTable[i].dirty, bufDescTable[i].valid, bufDescTable[i].refbit);
             }
-
+            // if the dirty bit is set, write back to disk first
             if (bufDescTable[i].dirty == true) {
                 bufDescTable[i].file.writePage(bufPool[i]);
                 bufDescTable[i].dirty = false;
@@ -193,6 +216,12 @@ void BufMgr::flushFile(File& file) {
     }
     file.close();
 }
+
+/**
+ * @brief dispose a page from a file. Remove from hashTable if needed
+ * @param file 
+ * @param pageNo
+ */
 
 void BufMgr::disposePage(File& file, const PageId PageNo) {
     FrameId frameNo;

@@ -169,7 +169,6 @@ void testBufMgr() {
 
 void test1(File &file1) {
   // Allocating pages in a file...
-  std::cout<<"test1: allocate\n";
   for (i = 0; i < num; i++) {
     bufMgr->allocPage(file1, pid[i], page);
     
@@ -179,7 +178,6 @@ void test1(File &file1) {
   }
 
   // Reading pages back....
-  std::cout<<"test1: read\n";
   for (i = 0; i < num; i++) {
     bufMgr->readPage(file1, pid[i], page);
     
